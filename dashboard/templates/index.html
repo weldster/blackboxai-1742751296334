@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Trading Bot Dashboard</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .animate-pulse-slow {
+            animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <i class="fas fa-robot text-blue-600 text-2xl mr-2"></i>
+                    <span class="font-semibold text-xl">Crypto Trading Bot</span>
+                </div>
+                <div class="flex items-center">
+                    <span id="connectionStatus" class="flex items-center">
+                        <i class="fas fa-circle text-green-500 animate-pulse-slow mr-2"></i>
+                        <span class="text-sm text-gray-600">Connected</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Market Overview -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- Current Price -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-gray-500 text-sm font-medium">Current Price</h3>
+                    <i class="fas fa-dollar-sign text-blue-500"></i>
+                </div>
+                <p id="currentPrice" class="mt-2 text-3xl font-semibold text-gray-900">Loading...</p>
+                <p class="mt-2 text-sm text-gray-500" id="tradingPair">{{ trading_pair }}</p>
+            </div>
+
+            <!-- Position Status -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-gray-500 text-sm font-medium">Position Status</h3>
+                    <i class="fas fa-chart-line text-blue-500"></i>
+                </div>
+                <p id="positionStatus" class="mt-2 text-3xl font-semibold text-gray-900">-</p>
+                <p id="entryPrice" class="mt-2 text-sm text-gray-500">Entry Price: -</p>
+            </div>
+
+            <!-- Daily Trades -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-gray-500 text-sm font-medium">Daily Trades</h3>
+                    <i class="fas fa-exchange-alt text-blue-500"></i>
+                </div>
+                <p id="dailyTrades" class="mt-2 text-3xl font-semibold text-gray-900">0</p>
+                <p id="lastTrade" class="mt-2 text-sm text-gray-500">Last: -</p>
+            </div>
+
+            <!-- Account Balance -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-gray-500 text-sm font-medium">Account Balance</h3>
+                    <i class="fas fa-wallet text-blue-500"></i>
+                </div>
+                <p id="accountBalance" class="mt-2 text-3xl font-semibold text-gray-900">Loading...</p>
+                <p id="lockedBalance" class="mt-2 text-sm text-gray-500">Locked: -</p>
+            </div>
+        </div>
+
+        <!-- Price Chart & Active Orders -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <!-- Price Chart -->
+            <div class="lg:col-span-2 bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Price Chart</h3>
+                <div id="priceChart" class="h-80">
+                    <!-- Chart will be rendered here -->
+                </div>
+            </div>
+
+            <!-- Active Orders -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Active Orders</h3>
+                <div id="activeOrders" class="space-y-4">
+                    <!-- Active orders will be displayed here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Trades & Assets -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Recent Trades -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Recent Trades</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead>
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Side</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentTrades" class="divide-y divide-gray-200">
+                            <!-- Recent trades will be displayed here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Asset Distribution -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Asset Distribution</h3>
+                <div id="assetList" class="space-y-4">
+                    <!-- Asset distribution will be displayed here -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Utility function to format numbers
+        function formatNumber(num, decimals = 2) {
+            return Number(num).toFixed(decimals);
+        }
+
+        // Update dashboard data
+        async function updateDashboard() {
+            try {
+                // Fetch market data
+                const marketResponse = await fetch('/api/market_data');
+                const marketData = await marketResponse.json();
+                if (marketData.success) {
+                    document.getElementById('currentPrice').textContent = 
+                        `$${formatNumber(marketData.current_price)}`;
+                    // Update chart here if using a charting library
+                }
+
+                // Fetch trading status
+                const statusResponse = await fetch('/api/trading_status');
+                const statusData = await statusResponse.json();
+                if (statusData.success) {
+                    const position = statusData.position;
+                    document.getElementById('positionStatus').textContent = 
+                        position.in_position ? 'In Position' : 'No Position';
+                    document.getElementById('entryPrice').textContent = 
+                        position.entry_price ? `Entry Price: $${formatNumber(position.entry_price)}` : 'Entry Price: -';
+                    document.getElementById('dailyTrades').textContent = position.trades_today;
+                    document.getElementById('lastTrade').textContent = 
+                        position.last_trade_date ? `Last: ${new Date(position.last_trade_date).toLocaleString()}` : 'Last: -';
+
+                    // Update active orders
+                    const ordersHtml = Object.entries(statusData.active_orders)
+                        .map(([orderId, order]) => `
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-900">${order.side} ${order.symbol}</p>
+                                    <p class="text-sm text-gray-500">Quantity: ${formatNumber(order.quantity, 8)}</p>
+                                </div>
+                                <div class="text-sm text-gray-500">
+                                    ${new Date(order.timestamp).toLocaleString()}
+                                </div>
+                            </div>
+                        `).join('') || '<p class="text-gray-500 text-sm">No active orders</p>';
+                    document.getElementById('activeOrders').innerHTML = ordersHtml;
+                }
+
+                // Fetch account info
+                const accountResponse = await fetch('/api/account_info');
+                const accountData = await accountResponse.json();
+                if (accountData.success) {
+                    // Update asset distribution
+                    const assetsHtml = accountData.balances
+                        .map(balance => `
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm font-medium text-gray-900">${balance.asset}</span>
+                                <span class="text-sm text-gray-500">
+                                    ${formatNumber(balance.free, 8)} (${formatNumber(balance.locked, 8)} locked)
+                                </span>
+                            </div>
+                        `).join('');
+                    document.getElementById('assetList').innerHTML = assetsHtml;
+
+                    // Update main balance display (assuming USDT as quote currency)
+                    const usdtBalance = accountData.balances.find(b => b.asset === 'USDT');
+                    if (usdtBalance) {
+                        document.getElementById('accountBalance').textContent = 
+                            `$${formatNumber(usdtBalance.free)}`;
+                        document.getElementById('lockedBalance').textContent = 
+                            `Locked: $${formatNumber(usdtBalance.locked)}`;
+                    }
+                }
+            } catch (error) {
+                console.error('Error updating dashboard:', error);
+            }
+        }
+
+        // Update dashboard every 5 seconds
+        setInterval(updateDashboard, 5000);
+        updateDashboard(); // Initial update
+    </script>
+</body>
+</html>
